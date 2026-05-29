@@ -1,0 +1,55 @@
+name: Сборка консольного квиза (exe / mac)
+
+# Запуск: вручную из вкладки Actions (Run workflow), при пуше тега вида v1.0,
+# либо при изменении кода игры в ветке main.
+on:
+  workflow_dispatch:
+  push:
+    tags: ["v*"]
+    branches: [main]
+    paths:
+      - "console_quiz.py"
+      - "game/**"
+      - "config.py"
+      - "data/**"
+      - "stukalova_quiz.spec"
+      - ".github/workflows/build.yml"
+
+jobs:
+  build:
+    name: ${{ matrix.label }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: windows-latest
+            label: Windows (.exe)
+            artifact: stukalova_quiz-windows
+          - os: macos-latest
+            label: macOS
+            artifact: stukalova_quiz-macos
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Установить зависимости сборки
+        run: |
+          python -m pip install --upgrade pip
+          pip install pyinstaller python-dotenv
+
+      - name: Собрать бинарник
+        run: pyinstaller stukalova_quiz.spec --noconfirm --clean
+
+      - name: Загрузить артефакт
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.artifact }}
+          path: |
+            dist/stukalova_quiz
+            dist/stukalova_quiz.exe
+          if-no-files-found: warn
