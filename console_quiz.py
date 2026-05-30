@@ -91,8 +91,12 @@ def row(text: str = "", color=None, indent: int = 2) -> str:
 
 
 def row_center(text: str, color=None) -> str:
+    """Текст по центру строки.
+
+    Важно: передавать СЫРОЙ текст (без ANSI-цвета), а цвет — параметром color.
+    Иначе escape-коды попадут в len() и выравнивание «поедет»."""
     pad = max(0, (W - len(text)) // 2)
-    return row(" " * (pad - 2 if pad >= 2 else 0) + text, color=color)
+    return row(" " * pad + text, color=color, indent=0)
 
 
 def wrap(text: str, width: int) -> list[str]:
@@ -114,22 +118,32 @@ def wrap(text: str, width: int) -> list[str]:
 # ────────────────────────────── баннер ──────────────────────────────
 
 BANNER = r"""
-   ___  _   _ ___ _____
-  / _ \| | | |_ _|__  /
- | | | | | | || |  / /
- | |_| | |_| || | / /_
-  \__\_\\___/|___/____|
+  ___  _   _ ___ _____
+ / _ \| | | |_ _|__  /
+| | | | | | || |  / /
+| |_| | |_| || | / /_
+ \__\_\\___/|___/____|
 """
+
+
+def print_banner_block() -> None:
+    """Напечатать ASCII-арт единым блоком: один и тот же отступ слева для
+    всех строк (иначе разной длины строки центрируются по-разному и арт
+    «съезжает»)."""
+    lines = BANNER.strip("\n").splitlines()
+    block_w = max(len(l) for l in lines)
+    left = max(0, (W - block_w) // 2)
+    for line in lines:
+        print(YELLOW(row(" " * left + line, indent=0)))
 
 
 def show_intro() -> None:
     clear()
     print(YELLOW(hr("=")))
-    for line in BANNER.strip("\n").splitlines():
-        print(YELLOW(row_center(line)))
+    print_banner_block()
     print(YELLOW(hr("=")))
-    print(row_center(BOLD("КТО ХОЧЕТ СТАТЬ МИЛЛИОНЕРОМ")))
-    print(row_center(DIM("~ Званый ужин с Ольгой Стукаловой (РЕН ТВ) ~")))
+    print(row_center("КТО ХОЧЕТ СТАТЬ МИЛЛИОНЕРОМ", color=BOLD))
+    print(row_center("~ Званый ужин с Ольгой Стукаловой (РЕН ТВ) ~", color=DIM))
     print(hr("-"))
     body = (
         "Перед тобой лесенка из 15 вопросов — от простых до каверзных. "
@@ -149,7 +163,7 @@ def show_intro() -> None:
 
 def render_ladder(current_level: int) -> None:
     print(hr("="))
-    print(row_center(BOLD("ПРИЗОВАЯ ЛЕСЕНКА")))
+    print(row_center("ПРИЗОВАЯ ЛЕСЕНКА", color=BOLD))
     print(hr("-"))
     limit = W - 2  # запас под отступ строки (indent=2)
     for item in reversed(PRIZE_LADDER):
@@ -201,7 +215,7 @@ def render_question(game) -> None:
 def show_audience(votes: dict) -> None:
     bar_len = 24
     print(hr("="))
-    print(row(BOLD("ПОМОЩЬ ЗАЛА"), indent=2))
+    print(row("ПОМОЩЬ ЗАЛА", color=BOLD, indent=2))
     print(hr("-"))
     for letter in sorted(votes):
         pct = votes[letter]
@@ -213,7 +227,7 @@ def show_audience(votes: dict) -> None:
 
 def show_friend(text: str) -> None:
     print(hr("="))
-    print(row(BOLD("ЗВОНОК ДРУГУ  *звонит телефон*"), indent=2))
+    print(row("ЗВОНОК ДРУГУ  *звонит телефон*", color=BOLD, indent=2))
     print(hr("-"))
     for line in wrap(f'— {text}', W - 4):
         print(row(line, color=CYAN))
@@ -259,7 +273,7 @@ def show_game_over(result) -> None:
         return
 
     print(RED(hr("=")))
-    print(RED(row_center(BOLD("ИГРА ОКОНЧЕНА"))))
+    print(row_center("ИГРА ОКОНЧЕНА", color=RED))
     print(hr("-"))
     if result.level_reached <= 0:
         print(row("Ты не взял(а) ни одного уровня — но это только начало!"))
