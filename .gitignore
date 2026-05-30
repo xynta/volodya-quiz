@@ -8,4 +8,5 @@ venv/
 # Артефакты сборки PyInstaller
 build/
 dist/
+artifacts/
 *.DS_Store
