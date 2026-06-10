@@ -1,14 +1,15 @@
 """Сборка текстов сообщений в антураже «Званого ужина»."""
 from config import QUESTIONS_PER_GAME
 from game.engine import GameState, AnswerResult
-from game.ladder import prize_for_level, guaranteed_level
+from game.ladder import prize_bonus_text, prize_for_level, guaranteed_level
 
 WELCOME = (
     "🍽️ <b>Викторина «Кто хочет стать миллионером»</b>\n"
-    "<i>По мотивам эпизода «Званый ужин с Ольгой Стукаловой» (РЕН ТВ)</i>\n\n"
-    "Тебя ждёт лесенка из 15 вопросов — от простых до каверзных. "
-    "Один неверный ответ завершает игру, но на 5-м и 10-м уровнях есть "
-    "🔒 несгораемые призы.\n\n"
+    "<i>По мотивам «Званого ужина» (РЕН ТВ)</i>\n\n"
+    "Каждая игра — случайный вечер недели с одним из героев передачи. "
+    "Тебя ждёт денежная лесенка из 15 вопросов: от 100 рублей до миллиона. "
+    "Один неверный ответ завершает игру, но 1 000 ₽ (ур. 5) и 32 000 ₽ "
+    "(ур. 10) — 🔒 несгораемые.\n\n"
     "В запасе три подсказки: 50:50, помощь зала и звонок другу.\n\n"
     "Готов(а) сесть за стол? Жми «Играть»!"
 )
@@ -36,6 +37,7 @@ def render_question(state: GameState) -> str:
     )
     return (
         f"💚 <b>Вопрос {level} из {QUESTIONS_PER_GAME}</b>\n"
+        f"🎭 Вечер: <i>{state.host} ({state.weekday})</i>\n"
         f"🏆 Играем за: <i>{prize_for_level(level)}</i>\n"
         f"🔒 Несгораемое: <i>{guaranteed_txt}</i>\n\n"
         f"{q['question']}\n\n"
@@ -59,11 +61,15 @@ def render_reveal(question: dict, result: AnswerResult) -> str:
 
 
 def render_game_over(result: AnswerResult) -> str:
+    bonus = prize_bonus_text(result.won, result.level_reached)
+    bonus_block = f"\n\n🎁 {bonus}" if bonus else ""
+
     if result.won:
         return (
             "🎉 <b>ПОБЕДА!</b> Ты ответил(а) на все 15 вопросов!\n"
-            f"🏆 Главный приз: <b>{result.final_prize}</b>\n\n"
-            "Ольга Стукалова аплодирует стоя! 👏 Жми «Играть ещё», чтобы повторить."
+            f"🏆 Главный приз: <b>{result.final_prize}</b>"
+            f"{bonus_block}\n\n"
+            "Зал аплодирует стоя! 👏 Жми «Играть ещё», чтобы повторить."
         )
     if result.level_reached <= 0:
         body = "Ты не взял(а) ни одного уровня — но это только начало!"
@@ -72,4 +78,4 @@ def render_game_over(result: AnswerResult) -> str:
             f"Ты дошёл(ла) до уровня <b>{result.level_reached}</b> из 15.\n"
             f"Забираешь: <b>{result.final_prize}</b>"
         )
-    return f"🏁 <b>Игра окончена.</b>\n{body}\n\nПопробуем ещё раз?"
+    return f"🏁 <b>Игра окончена.</b>\n{body}{bonus_block}\n\nПопробуем ещё раз?"

@@ -22,6 +22,23 @@ def require_bot_token() -> str:
         )
     return BOT_TOKEN
 
+
+# Имена пользователей Telegram (без @), которым доступны админ-команды бота —
+# например, скачивание собранных билдов через /builds. По умолчанию — @Ignodeau
+# и @Pj_301m. Можно переопределить переменной окружения ADMIN_USERNAMES
+# (через запятую) — тогда дефолт игнорируется.
+ADMIN_USERNAMES = {
+    u.strip().lstrip("@").lower()
+    for u in os.getenv("ADMIN_USERNAMES", "Ignodeau,Pj_301m").split(",")
+    if u.strip()
+}
+
+
+def is_admin(username: str | None) -> bool:
+    """Разрешён ли пользователю доступ к админ-командам (по username)."""
+    return bool(username) and username.lower() in ADMIN_USERNAMES
+
+
 # Корень с ресурсами. В обычном запуске — папка проекта; внутри собранного
 # PyInstaller-бинарника файлы лежат во временной папке sys._MEIPASS.
 if getattr(sys, "frozen", False):
@@ -36,23 +53,75 @@ QUESTIONS_PER_GAME = 15
 # Количество подсказок (lifelines) на одну игру — по одной каждого типа.
 # 50:50, «помощь зала», «звонок другу».
 
-# Призовая лесенка в антураже «Званого ужина».
-# is_checkpoint=True — несгораемый уровень: при ошибке после него
-# игрок не падает в ноль, а сохраняет этот приз.
-PRIZE_LADDER = [
-    {"level": 1,  "prize": "Купон в «Азбуку Вкуса»",                          "is_checkpoint": False},
-    {"level": 2,  "prize": "Рецепт салата-коктейля из Петрозаводска",         "is_checkpoint": False},
-    {"level": 3,  "prize": "Порция мороженого в варёнке",                     "is_checkpoint": False},
-    {"level": 4,  "prize": "Букет цветов от гостя Александра",                 "is_checkpoint": False},
-    {"level": 5,  "prize": "Фоторамка от Владимира",                          "is_checkpoint": True},
-    {"level": 6,  "prize": "Фирменная курица в вине со сливой",               "is_checkpoint": False},
-    {"level": 7,  "prize": "Сувенирная неваляшка «не сдавайся»",              "is_checkpoint": False},
-    {"level": 8,  "prize": "Таблица калорийности на кухню",                   "is_checkpoint": False},
-    {"level": 9,  "prize": "Карта «40» от гостьи Леры",                       "is_checkpoint": False},
-    {"level": 10, "prize": "150 баллов вечера и звание гостеприимной хозяйки", "is_checkpoint": True},
-    {"level": 11, "prize": "Гастрольный тур с «Весёлыми девчатами-смешинками»", "is_checkpoint": False},
-    {"level": 12, "prize": "Зажигательный финальный танец на бис",            "is_checkpoint": False},
-    {"level": 13, "prize": "Эфир в прайм-тайм на РЕН ТВ",                     "is_checkpoint": False},
-    {"level": 14, "prize": "Туристическая путёвка",                          "is_checkpoint": False},
-    {"level": 15, "prize": "ГЛАВНЫЙ ПРИЗ — холодильник Gorenje с кристаллами Swarovski!", "is_checkpoint": False},
+# Вечера недели «Званого ужина». Каждый день — отдельная викторина из 15
+# уровней (по 3 варианта вопроса на уровень). В начале игры вечер выбирается
+# случайно. Поле "day" совпадает с полем "day" в data/questions.json.
+DAYS = [
+    {"day": 1, "weekday": "понедельник", "host": "Ольга Стукалова"},
+    {"day": 2, "weekday": "вторник",     "host": "Александр Асиновский"},
+    {"day": 3, "weekday": "среда",       "host": "Лера Гаврилова"},
+    {"day": 4, "weekday": "четверг",     "host": "Владимир Чони"},
+    {"day": 5, "weekday": "пятница",     "host": "Владимир Алексеев"},
 ]
+
+
+def day_info(day: int) -> dict:
+    """Метаданные вечера по его номеру (1–5)."""
+    for item in DAYS:
+        if item["day"] == day:
+            return item
+    return {"day": day, "weekday": "?", "host": "?"}
+
+
+# Денежная призовая лесенка «Кто хочет стать миллионером» (рубли).
+# is_checkpoint=True — несгораемый уровень: при ошибке после него игрок
+# не падает в ноль, а сохраняет этот приз. Несгораемые — 1 000 ₽ (ур. 5)
+# и 32 000 ₽ (ур. 10), как в спецификации призов.
+PRIZE_LADDER = [
+    {"level": 1,  "prize": "100 рублей",       "is_checkpoint": False},
+    {"level": 2,  "prize": "200 рублей",       "is_checkpoint": False},
+    {"level": 3,  "prize": "300 рублей",       "is_checkpoint": False},
+    {"level": 4,  "prize": "500 рублей",       "is_checkpoint": False},
+    {"level": 5,  "prize": "1 000 рублей",     "is_checkpoint": True},
+    {"level": 6,  "prize": "2 000 рублей",     "is_checkpoint": False},
+    {"level": 7,  "prize": "4 000 рублей",     "is_checkpoint": False},
+    {"level": 8,  "prize": "8 000 рублей",     "is_checkpoint": False},
+    {"level": 9,  "prize": "16 000 рублей",    "is_checkpoint": False},
+    {"level": 10, "prize": "32 000 рублей",    "is_checkpoint": True},
+    {"level": 11, "prize": "64 000 рублей",    "is_checkpoint": False},
+    {"level": 12, "prize": "125 000 рублей",   "is_checkpoint": False},
+    {"level": 13, "prize": "250 000 рублей",   "is_checkpoint": False},
+    {"level": 14, "prize": "500 000 рублей",   "is_checkpoint": False},
+    {"level": 15, "prize": "1 000 000 рублей", "is_checkpoint": False},
+]
+
+# Тексты призов из спецификации. Показываются на экране окончания игры
+# в зависимости от достигнутого несгораемого уровня (см. game/ladder.py).
+
+# Несгораемое на 5-м уровне (1 000 ₽).
+PRIZE_5_TEXT = (
+    "Вы выиграли тысячу рублей. В подарок мудрость от Владимира Алексеева: "
+    "кто ходит в гости по утрам, тот поступает мудро, то тут сто грамм, "
+    "то там сто грамм, на то оно и утро!"
+)
+
+# Несгораемое на 10-м уровне (32 000 ₽).
+PRIZE_10_TEXT = (
+    "Вы выиграли 32 тысячи рублей и рецепт сникерса по-украински:\n"
+    "1. Кусочек чёрного хлебушка\n"
+    "2. Кусочек сала\n"
+    "3. Сверху плиточка шоколада\n"
+    "4. Сало плавится, шоколад тает\n"
+    "5. И получается сникерс по-украински"
+)
+
+# Суперприз за все 15 вопросов (1 000 000 ₽).
+PRIZE_15_TEXT = (
+    "Вы выиграли суперприз, один миллион рублей!\n\n"
+    "Ссылка на все выпуски Званого Ужина с Владимиром Алексеевым:\n"
+    "https://drive.google.com/file/d/1OZMruBVEoAnP8j3Z7rr0b2PEDNbj7wzY/view\n\n"
+    "Ссылка на нарративную новеллу по Званому Ужину с Владимиром Алексеевым:\n"
+    "https://locator101.itch.io/dinner\n\n"
+    "Ссылка на группу VK, посвящённую этому выпуску:\n"
+    "https://vk.ru/zvanyi_uzhin"
+)

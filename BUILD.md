@@ -10,10 +10,10 @@
 ./build.sh
 ```
 
-Результат: `dist/stukalova_quiz`. Запуск — двойным кликом или из терминала:
+Результат: `dist/volodya_quiz`. Запуск — двойным кликом или из терминала:
 
 ```bash
-./dist/stukalova_quiz
+./dist/volodya_quiz
 ```
 
 > Это не `.exe` (у macOS другой формат), но смысл тот же — запуск без Python.
@@ -35,9 +35,9 @@
    ```
 2. На GitHub: вкладка **Actions** → workflow **«Сборка консольного квиза»**
    → **Run workflow**. (Он также запускается сам при пуше в `main`.)
-3. Когда сборка закончится, скачай артефакт **`stukalova_quiz-windows`** —
-   внутри готовый `stukalova_quiz.exe`. Заодно соберётся и macOS-версия
-   (`stukalova_quiz-macos`).
+3. Когда сборка закончится, скачай артефакт **`volodya_quiz-windows`** —
+   внутри готовый `volodya_quiz.exe`. Заодно соберётся и macOS-версия
+   (`volodya_quiz-macos`).
 
 Конфигурация: [.github/workflows/build.yml](.github/workflows/build.yml).
 
@@ -49,11 +49,11 @@
 build.bat
 ```
 
-Результат: `dist\stukalova_quiz.exe`.
+Результат: `dist\volodya_quiz.exe`.
 
 ## Как это устроено
 
-- Сборка управляется spec-файлом [stukalova_quiz.spec](stukalova_quiz.spec)
+- Сборка управляется spec-файлом [volodya_quiz.spec](volodya_quiz.spec)
   (одинаков для всех ОС, разделители путей внутри от системы не зависят).
 - Aiogram и сетевая обвязка бота из консольной сборки исключены — бинарник
   компактнее.

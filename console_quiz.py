@@ -15,7 +15,7 @@ import time
 
 from config import PRIZE_LADDER, QUESTIONS_PER_GAME
 from game.engine import new_game, answer
-from game.ladder import guaranteed_level, prize_for_level
+from game.ladder import guaranteed_level, prize_bonus_text, prize_for_level
 from game.lifelines import audience_help, fifty_fifty, friend_call
 
 FROZEN = getattr(sys, "frozen", False)  # запущены как собранный exe/бинарник
@@ -143,13 +143,14 @@ def show_intro() -> None:
     print_banner_block()
     print(YELLOW(hr("=")))
     print(row_center("КТО ХОЧЕТ СТАТЬ МИЛЛИОНЕРОМ", color=BOLD))
-    print(row_center("~ Званый ужин с Ольгой Стукаловой (РЕН ТВ) ~", color=DIM))
+    print(row_center("~ По мотивам «Званого ужина» (РЕН ТВ) ~", color=DIM))
     print(hr("-"))
     body = (
-        "Перед тобой лесенка из 15 вопросов — от простых до каверзных. "
-        "Один неверный ответ завершает игру, но на 5-м и 10-м уровнях "
-        "есть несгораемые призы [*]. В запасе три подсказки: 50:50, "
-        "помощь зала и звонок другу."
+        "Каждая игра — случайный вечер недели с одним из героев «Званого "
+        "ужина». Перед тобой денежная лесенка из 15 вопросов: от 100 рублей "
+        "до миллиона. Один неверный ответ завершает игру, но 1 000 ₽ (ур. 5) "
+        "и 32 000 ₽ (ур. 10) — несгораемые [*]. В запасе три подсказки: "
+        "50:50, помощь зала и звонок другу."
     )
     for line in wrap(body, W - 4):
         print(row(line))
@@ -194,6 +195,8 @@ def render_question(game) -> None:
 
     print(MAGENTA(hr("=")))
     print(MAGENTA(row(f"Вопрос {level} из {QUESTIONS_PER_GAME}", color=BOLD)))
+    for line in wrap(f"Вечер: {game.host} ({game.weekday})", W - 4):
+        print(row(line, color=DIM))
     for line in wrap(f"Играем за: {prize_for_level(level)}", W - 4):
         print(row(line, color=GOLD))
     for line in wrap(f"Несгораемое: {guaranteed_txt}", W - 4):
@@ -254,8 +257,29 @@ def show_reveal(question: dict, result) -> None:
         input(DIM("   Enter — следующий вопрос... "))
 
 
+def print_prize_bonus(text: str) -> None:
+    """Призовой текст из спецификации печатаем БЕЗ боковых рамок, чтобы
+    длинные ссылки не обрезались по ширине холста и оставались кликабельными."""
+    print()
+    print(GOLD(hr("=")))
+    print(GOLD(row_center("ВАШ ПРИЗ", color=BOLD)))
+    print(GOLD(hr("=")))
+    for para in text.split("\n"):
+        if not para:
+            print()
+            continue
+        # Строка без пробелов (ссылка/длинное слово) — печатаем целиком.
+        if " " not in para:
+            print("   " + para)
+        else:
+            for line in wrap(para, W - 4):
+                print("   " + line)
+
+
 def show_game_over(result) -> None:
     clear()
+    bonus = prize_bonus_text(result.won, result.level_reached)
+
     if result.won:
         print(GOLD(hr("=")))
         for line in [
@@ -268,8 +292,10 @@ def show_game_over(result) -> None:
         for line in wrap(f"ГЛАВНЫЙ ПРИЗ: {result.final_prize}", W - 4):
             print(row(line, color=GOLD))
         print(row())
-        print(row("Ольга Стукалова аплодирует стоя!  \\o/", color=BOLD))
+        print(row("Зал аплодирует стоя!  \\o/", color=BOLD))
         print(GOLD(hr("=")))
+        if bonus:
+            print_prize_bonus(bonus)
         return
 
     print(RED(hr("=")))
@@ -282,6 +308,8 @@ def show_game_over(result) -> None:
         for line in wrap(f"Забираешь: {result.final_prize}", W - 4):
             print(row(line, color=GOLD))
     print(RED(hr("=")))
+    if bonus:
+        print_prize_bonus(bonus)
 
 
 # ────────────────────────────── ввод ──────────────────────────────

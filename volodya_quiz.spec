@@ -5,8 +5,8 @@
 Aiogram и прочую «ботовую» обвязку исключаем — консольной игре они не нужны,
 бинарник остаётся компактным.
 
-Сборка (Mac и Windows одинаково):  pyinstaller stukalova_quiz.spec
-Результат: dist/stukalova_quiz  (на Windows — dist/stukalova_quiz.exe)
+Сборка (Mac и Windows одинаково):  pyinstaller volodya_quiz.spec
+Результат: dist/volodya_quiz  (на Windows — dist/volodya_quiz.exe)
 """
 
 a = Analysis(
@@ -29,7 +29,7 @@ exe = EXE(
     a.binaries,
     a.datas,
     [],
-    name='stukalova_quiz',
+    name='volodya_quiz',
     debug=False,
     bootloader_ignore_signals=False,
     strip=False,

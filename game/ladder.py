@@ -1,5 +1,5 @@
 """Помощники по призовой лесенке."""
-from config import PRIZE_LADDER
+from config import PRIZE_5_TEXT, PRIZE_10_TEXT, PRIZE_15_TEXT, PRIZE_LADDER
 
 
 def prize_for_level(level: int) -> str:
@@ -19,6 +19,22 @@ def guaranteed_level(level: int) -> int:
         if item["level"] <= level and item["is_checkpoint"]:
             guaranteed = item["level"]
     return guaranteed
+
+
+def prize_bonus_text(won: bool, level_reached: int) -> str | None:
+    """Особый призовой текст из спецификации по итогам игры.
+
+    Победа (все 15) — суперприз с ссылками. Иначе зависит от достигнутого
+    несгораемого уровня: 32 000 ₽ (ур. 10) — рецепт сникерса, 1 000 ₽
+    (ур. 5) — мудрость от Владимира Алексеева. Ниже 5-го — None."""
+    if won:
+        return PRIZE_15_TEXT
+    guaranteed = guaranteed_level(level_reached)
+    if guaranteed >= 10:
+        return PRIZE_10_TEXT
+    if guaranteed >= 5:
+        return PRIZE_5_TEXT
+    return None
 
 
 def ladder_overview(current_level: int) -> str:

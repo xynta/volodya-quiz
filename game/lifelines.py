@@ -41,30 +41,17 @@ def audience_help(question: dict, hidden: list[str] | None = None) -> dict[str, 
     return votes
 
 
-_FRIEND_SURE = [
-    "Слушай, я почти уверен — это вариант {letter}. Ставь смело.",
-    "Да тут к гадалке не ходи, {letter}! Я этот «Званый ужин» наизусть знаю.",
-    "Точно {letter}. Помню этот эпизод с Ольгой.",
-]
-_FRIEND_UNSURE = [
-    "Хм, не уверен... но я бы поставил на {letter}.",
-    "Думаю, скорее всего {letter}, но не ручаюсь на сто процентов.",
-    "Кажется, {letter}. Хотя могу и ошибаться, решай сам.",
+# Канонические ответы друга из спецификации. Друг бесполезен и отвечает
+# невпопад — никакой реальной подсказки, чистый юмор передачи.
+_FRIEND_ANSWERS = [
+    "Выбирайте что хотите, как хотите, хоть усритесь.",
+    "Посмотри в компьютере. Сейчас ведь куда ни посмотри, везде компьютер.",
+    "В этой викторине нужны образованные люди.",
+    "Опупенно, бомбенно, бумбумба!",
 ]
 
 
 def friend_call(question: dict, hidden: list[str] | None = None) -> str:
-    """Текст «звонка другу». В большинстве случаев подсказывает правильный
-    вариант, но иногда — неуверенно или мимо (как в реальной передаче)."""
-    hidden = hidden or []
-    correct = question["correct"]
-    available = [l for l in LETTERS if l not in hidden]
-
-    roll = random.random()
-    if roll < 0.7:
-        return random.choice(_FRIEND_SURE).format(letter=correct)
-    if roll < 0.9:
-        return random.choice(_FRIEND_UNSURE).format(letter=correct)
-    # Друг ошибается — называет неверный из доступных.
-    wrong = [l for l in available if l != correct] or [correct]
-    return random.choice(_FRIEND_UNSURE).format(letter=random.choice(wrong))
+    """Текст «звонка другу» — один из канонических ответов наугад.
+    Аргументы question/hidden оставлены для совместимости интерфейса."""
+    return random.choice(_FRIEND_ANSWERS)

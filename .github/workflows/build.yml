@@ -12,7 +12,7 @@ on:
       - "game/**"
       - "config.py"
       - "data/**"
-      - "stukalova_quiz.spec"
+      - "volodya_quiz.spec"
       - ".github/workflows/build.yml"
 
 jobs:
@@ -25,10 +25,10 @@ jobs:
         include:
           - os: windows-latest
             label: Windows (.exe)
-            artifact: stukalova_quiz-windows
+            artifact: volodya_quiz-windows
           - os: macos-latest
             label: macOS
-            artifact: stukalova_quiz-macos
+            artifact: volodya_quiz-macos
 
     steps:
       - uses: actions/checkout@v4
@@ -43,13 +43,13 @@ jobs:
           pip install pyinstaller python-dotenv
 
       - name: Собрать бинарник
-        run: pyinstaller stukalova_quiz.spec --noconfirm --clean
+        run: pyinstaller volodya_quiz.spec --noconfirm --clean
 
       - name: Загрузить артефакт
         uses: actions/upload-artifact@v4
         with:
           name: ${{ matrix.artifact }}
           path: |
-            dist/stukalova_quiz
-            dist/stukalova_quiz.exe
+            dist/volodya_quiz
+            dist/volodya_quiz.exe
           if-no-files-found: warn

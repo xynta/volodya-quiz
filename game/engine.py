@@ -1,8 +1,8 @@
 """Движок лесенки: состояние игры и обработка ответов."""
 from dataclasses import dataclass, field, asdict
 
-from config import QUESTIONS_PER_GAME, PRIZE_LADDER
-from game.questions import build_game_questions
+from config import QUESTIONS_PER_GAME, PRIZE_LADDER, day_info
+from game.questions import build_game_questions, random_day
 from game.ladder import guaranteed_level, prize_for_level
 
 TOTAL_LEVELS = len(PRIZE_LADDER)
@@ -10,6 +10,7 @@ TOTAL_LEVELS = len(PRIZE_LADDER)
 
 @dataclass
 class GameState:
+    day: int = 1                                    # выбранный вечер (1–5)
     questions: list = field(default_factory=list)  # вопросы на игру (по порядку)
     index: int = 0                                  # текущий вопрос, 0-based
     hidden: list = field(default_factory=list)      # буквы, скрытые 50:50 на текущем вопросе
@@ -35,12 +36,25 @@ class GameState:
         """Уровень текущего вопроса, 1-based."""
         return self.index + 1
 
+    @property
+    def host(self) -> str:
+        """Имя хозяина выбранного вечера."""
+        return day_info(self.day)["host"]
+
+    @property
+    def weekday(self) -> str:
+        """День недели выбранного вечера."""
+        return day_info(self.day)["weekday"]
+
     def available_letters(self) -> list[str]:
         return [l for l in ("A", "B", "C", "D") if l not in self.hidden]
 
 
-def new_game() -> GameState:
-    return GameState(questions=build_game_questions())
+def new_game(day: int | None = None) -> GameState:
+    """Новая игра. Если вечер не указан — выбирается случайно."""
+    if day is None:
+        day = random_day()
+    return GameState(day=day, questions=build_game_questions(day))
 
 
 @dataclass

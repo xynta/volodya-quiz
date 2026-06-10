@@ -3,29 +3,31 @@ import json
 import random
 from collections import defaultdict
 
-from config import QUESTIONS_PATH, QUESTIONS_PER_GAME
+from config import DAYS, QUESTIONS_PATH, QUESTIONS_PER_GAME
 
 with open(QUESTIONS_PATH, encoding="utf-8") as f:
     ALL_QUESTIONS = json.load(f)
 
-# Группируем вопросы по наборам: {1: [...], 2: [...], ...}
-_BY_SET = defaultdict(list)
+# Группируем вопросы по (день, уровень): {(1, 1): [3 варианта], ...}
+_BY_DAY_SET = defaultdict(list)
 for _q in ALL_QUESTIONS:
-    _BY_SET[_q["set"]].append(_q)
+    _BY_DAY_SET[(_q["day"], _q["set"])].append(_q)
 
-SETS = sorted(_BY_SET.keys())
+# Доступные дни (вечера), которые реально есть в данных.
+AVAILABLE_DAYS = sorted({d for (d, _s) in _BY_DAY_SET})
 
 
-def build_game_questions():
-    """Собрать вопросы на одну игру: по одному случайному из каждого набора,
-    в порядке наборов (нарастающая сложность). Если наборов больше, чем нужно
-    вопросов — берём первые QUESTIONS_PER_GAME; если меньше — добираем случайно."""
-    chosen = [random.choice(_BY_SET[s]) for s in SETS]
+def random_day() -> int:
+    """Случайный вечер из числа описанных в config.DAYS и присутствующих
+    в данных."""
+    days = [d["day"] for d in DAYS if d["day"] in AVAILABLE_DAYS] or AVAILABLE_DAYS
+    return random.choice(days)
 
-    if len(chosen) >= QUESTIONS_PER_GAME:
-        return chosen[:QUESTIONS_PER_GAME]
 
-    # Наборов меньше, чем нужно вопросов — добираем случайными из общего пула.
-    pool = [q for q in ALL_QUESTIONS if q not in chosen]
-    random.shuffle(pool)
-    return chosen + pool[: QUESTIONS_PER_GAME - len(chosen)]
+def build_game_questions(day: int):
+    """Собрать вопросы на одну игру для конкретного вечера: по одному
+    случайному варианту из каждого уровня, в порядке уровней (нарастающая
+    сложность)."""
+    sets = sorted(s for (d, s) in _BY_DAY_SET if d == day)
+    chosen = [random.choice(_BY_DAY_SET[(day, s)]) for s in sets]
+    return chosen[:QUESTIONS_PER_GAME]
