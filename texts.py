@@ -37,7 +37,6 @@ def render_question(state: GameState) -> str:
     )
     return (
         f"💚 <b>Вопрос {level} из {QUESTIONS_PER_GAME}</b>\n"
-        f"🎭 Вечер: <i>{state.host} ({state.weekday})</i>\n"
         f"🏆 Играем за: <i>{prize_for_level(level)}</i>\n"
         f"🔒 Несгораемое: <i>{guaranteed_txt}</i>\n\n"
         f"{q['question']}\n\n"

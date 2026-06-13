@@ -10,3 +10,6 @@ build/
 dist/
 artifacts/
 *.DS_Store
+
+# Логи бота (ротируются RotatingFileHandler)
+logs/

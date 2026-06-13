@@ -1,6 +1,7 @@
 """Точка входа: запуск бота в режиме long-polling."""
 import asyncio
 import logging
+from logging.handlers import RotatingFileHandler
 
 from aiogram import Bot, Dispatcher
 from aiogram.client.default import DefaultBotProperties
@@ -8,8 +9,28 @@ from aiogram.enums import ParseMode
 from aiogram.fsm.storage.memory import MemoryStorage
 from aiogram.types import BotCommand
 
-from config import require_bot_token
+from config import BASE_DIR, require_bot_token
 from handlers import setup_routers
+
+
+def setup_logging() -> None:
+    """INFO-логи в консоль и в файл с ротацией: 5 МБ × 3 бэкапа (потолок ≈20 МБ),
+    чтобы лог не рос бесконечно. Файлы — в logs/ (вне гита)."""
+    log_dir = BASE_DIR / "logs"
+    log_dir.mkdir(exist_ok=True)
+    logging.basicConfig(
+        level=logging.INFO,
+        format="%(asctime)s %(levelname)s %(name)s: %(message)s",
+        handlers=[
+            logging.StreamHandler(),
+            RotatingFileHandler(
+                log_dir / "bot.log",
+                maxBytes=5 * 1024 * 1024,
+                backupCount=3,
+                encoding="utf-8",
+            ),
+        ],
+    )
 
 
 async def set_commands(bot: Bot) -> None:
@@ -21,7 +42,7 @@ async def set_commands(bot: Bot) -> None:
 
 
 async def main() -> None:
-    logging.basicConfig(level=logging.INFO)
+    setup_logging()
 
     bot = Bot(token=require_bot_token(), default=DefaultBotProperties(parse_mode=ParseMode.HTML))
     dp = Dispatcher(storage=MemoryStorage())
