@@ -3,7 +3,7 @@ from dataclasses import dataclass, field, asdict
 
 from config import QUESTIONS_PER_GAME, PRIZE_LADDER, day_info
 from game.questions import build_game_questions, random_day
-from game.ladder import guaranteed_level, prize_for_level
+from game.ladder import amount_for_level, guaranteed_level, prize_for_level
 
 TOTAL_LEVELS = len(PRIZE_LADDER)
 
@@ -67,6 +67,7 @@ class AnswerResult:
     level_reached: int      # сколько вопросов пройдено верно (1-based)
     guaranteed_prize: str   # несгораемый приз при проигрыше
     final_prize: str        # итоговый приз (для finished)
+    final_amount: int       # тот же итоговый приз числом, в рублях (для лидерборда)
 
 
 def answer(state: GameState, letter: str) -> AnswerResult:
@@ -89,6 +90,7 @@ def answer(state: GameState, letter: str) -> AnswerResult:
             level_reached=level - 1,
             guaranteed_prize=prize_for_level(guaranteed),
             final_prize=prize_for_level(guaranteed),
+            final_amount=amount_for_level(guaranteed),
         )
 
     # Верный ответ.
@@ -104,6 +106,7 @@ def answer(state: GameState, letter: str) -> AnswerResult:
             level_reached=level,
             guaranteed_prize=prize_for_level(level),
             final_prize=prize_for_level(level),
+            final_amount=amount_for_level(level),
         )
 
     # Переходим к следующему вопросу.
@@ -118,4 +121,5 @@ def answer(state: GameState, letter: str) -> AnswerResult:
         level_reached=level,
         guaranteed_prize=prize_for_level(guaranteed_level(level)),
         final_prize=prize_for_level(level),
+        final_amount=amount_for_level(level),
     )

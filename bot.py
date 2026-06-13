@@ -36,6 +36,8 @@ def setup_logging() -> None:
 async def set_commands(bot: Bot) -> None:
     await bot.set_my_commands([
         BotCommand(command="play", description="Начать новую игру"),
+        BotCommand(command="top", description="Лидерборд"),
+        BotCommand(command="cmd", description="Запуск в консоли (PowerShell)"),
         BotCommand(command="help", description="Как играть"),
         BotCommand(command="start", description="Перезапустить бота"),
     ])

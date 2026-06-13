@@ -13,3 +13,6 @@ artifacts/
 
 # Логи бота (ротируются RotatingFileHandler)
 logs/
+
+# Лидерборд (рантайм-данные игроков, переопределяется LEADERBOARD_PATH)
+data/leaderboard.json

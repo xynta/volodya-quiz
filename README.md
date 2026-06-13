@@ -7,13 +7,33 @@
 10 (32 000 ₽), три подсказки — 50:50, помощь зала, звонок другу. Все вопросы —
 в [data/questions.json](data/questions.json).
 
-Две версии с общим игровым ядром (`game/`):
+Три способа поиграть (Python-версии — на общем игровом ядре `game/`):
 
 - **Telegram-бот** — [bot.py](bot.py) (aiogram). Нужен `BOT_TOKEN` в `.env`.
-- **Консольная версия в ASCII-стиле** — [console_quiz.py](console_quiz.py).
+  Ведёт лидерборд: `/top` показывает, кто унёс больше всех рублей (см. ниже).
+- **Консоль одной командой (PowerShell, без установок)** — [quiz.ps1](quiz.ps1).
+  Ни Python, ни файлов на диск — скрипт сам тянет вопросы из репозитория.
+- **Консольная версия на Python в ASCII-стиле** — [console_quiz.py](console_quiz.py).
   Токен не нужен.
 
-## Консоль — быстрый старт
+## Консоль одной командой (Windows, PowerShell)
+
+Самый быстрый способ для Windows — без установки Python и без скачивания файлов:
+
+```powershell
+irm https://raw.githubusercontent.com/xynta/volodya-quiz/main/quiz.ps1 | iex
+```
+
+Из обычной командной строки (CMD):
+
+```bat
+powershell -NoProfile -ExecutionPolicy Bypass -Command "irm https://raw.githubusercontent.com/xynta/volodya-quiz/main/quiz.ps1 | iex"
+```
+
+Управление: `A/B/C/D` — ответ, `1` / `2` / `3` — подсказки (50:50, зал, друг),
+`Q` — выход. В Telegram-боте эту же команду подскажет `/cmd`.
+
+## Консоль на Python — быстрый старт
 
 ```bash
 python3 console_quiz.py
@@ -38,6 +58,15 @@ pip install -r requirements.txt
 cp .env.example .env   # вписать BOT_TOKEN от @BotFather
 python3 bot.py
 ```
+
+### Лидерборд
+
+После каждой игры бот прибавляет к зачёту игрока **несгораемую сумму, которую он
+унёс домой** (при проигрыше — последний несгораемый уровень: 0 / 1 000 ₽ /
+32 000 ₽; при победе — весь миллион). Команда `/top` (и кнопка «🏆 Лидерборд»
+после игры) показывает топ игроков по сумме унесённого за все игры. Имя берётся
+из Telegram. Данные лежат в `data/leaderboard.json` (вне гита) и переживают
+перезапуск бота; путь можно сменить переменной `LEADERBOARD_PATH`.
 
 ### Скачивание билдов через бота (для админа)
 

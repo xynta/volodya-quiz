@@ -35,3 +35,21 @@ def play_keyboard(text: str = "▶️ Играть") -> InlineKeyboardMarkup:
     builder = InlineKeyboardBuilder()
     builder.button(text=text, callback_data="play")
     return builder.as_markup()
+
+
+def welcome_keyboard() -> InlineKeyboardMarkup:
+    """Стартовый экран: играть в боте или запустить консольную версию."""
+    builder = InlineKeyboardBuilder()
+    builder.button(text="▶️ Играть", callback_data="play")
+    builder.button(text="💻 Запуск через CMD", callback_data="howto_cmd")
+    builder.adjust(1)
+    return builder.as_markup()
+
+
+def game_over_keyboard() -> InlineKeyboardMarkup:
+    """После игры: сыграть ещё или открыть лидерборд."""
+    builder = InlineKeyboardBuilder()
+    builder.button(text="🔁 Играть ещё", callback_data="play")
+    builder.button(text="🏆 Лидерборд", callback_data="leaderboard")
+    builder.adjust(1)
+    return builder.as_markup()

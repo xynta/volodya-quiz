@@ -9,6 +9,21 @@ def prize_for_level(level: int) -> str:
     return PRIZE_LADDER[level - 1]["prize"]
 
 
+def amount_for_level(level: int) -> int:
+    """Сумма приза на уровне числом, в рублях (1-based). level<=0 → 0."""
+    if level <= 0:
+        return 0
+    return PRIZE_LADDER[level - 1]["amount"]
+
+
+def format_rubles(amount: int) -> str:
+    """Сумма в рублях с разделением разрядов: 33000 → «33 000 ₽».
+
+    Используются неразрывные пробелы, чтобы число и «₽» не разрывались
+    переносом строки в сообщении."""
+    return f"{amount:,}".replace(",", " ") + " ₽"
+
+
 def guaranteed_level(level: int) -> int:
     """Несгораемый уровень при провале на следующем вопросе.
 

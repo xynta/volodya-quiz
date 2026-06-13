@@ -47,6 +47,11 @@ else:
     BASE_DIR = Path(__file__).resolve().parent
 QUESTIONS_PATH = BASE_DIR / "data" / "questions.json"
 
+# Файл с лидербордом (сумма унесённых несгораемых по игрокам). Хранится вне
+# гита и переживает перезапуск бота. Путь можно переопределить переменной
+# окружения LEADERBOARD_PATH — например, чтобы положить его на постоянный диск.
+LEADERBOARD_PATH = Path(os.getenv("LEADERBOARD_PATH") or BASE_DIR / "data" / "leaderboard.json")
+
 # Сколько вопросов в одной игре (классическая лесенка «Миллионера»).
 QUESTIONS_PER_GAME = 15
 
@@ -77,22 +82,24 @@ def day_info(day: int) -> dict:
 # is_checkpoint=True — несгораемый уровень: при ошибке после него игрок
 # не падает в ноль, а сохраняет этот приз. Несгораемые — 1 000 ₽ (ур. 5)
 # и 32 000 ₽ (ур. 10), как в спецификации призов.
+# Поле "amount" — та же сумма числом (рубли), нужна для лидерборда: лесенка
+# хранит приз текстом, а считать суммы удобнее по числам (см. game/ladder.py).
 PRIZE_LADDER = [
-    {"level": 1,  "prize": "100 рублей",       "is_checkpoint": False},
-    {"level": 2,  "prize": "200 рублей",       "is_checkpoint": False},
-    {"level": 3,  "prize": "300 рублей",       "is_checkpoint": False},
-    {"level": 4,  "prize": "500 рублей",       "is_checkpoint": False},
-    {"level": 5,  "prize": "1 000 рублей",     "is_checkpoint": True},
-    {"level": 6,  "prize": "2 000 рублей",     "is_checkpoint": False},
-    {"level": 7,  "prize": "4 000 рублей",     "is_checkpoint": False},
-    {"level": 8,  "prize": "8 000 рублей",     "is_checkpoint": False},
-    {"level": 9,  "prize": "16 000 рублей",    "is_checkpoint": False},
-    {"level": 10, "prize": "32 000 рублей",    "is_checkpoint": True},
-    {"level": 11, "prize": "64 000 рублей",    "is_checkpoint": False},
-    {"level": 12, "prize": "125 000 рублей",   "is_checkpoint": False},
-    {"level": 13, "prize": "250 000 рублей",   "is_checkpoint": False},
-    {"level": 14, "prize": "500 000 рублей",   "is_checkpoint": False},
-    {"level": 15, "prize": "1 000 000 рублей", "is_checkpoint": False},
+    {"level": 1,  "prize": "100 рублей",       "amount": 100,       "is_checkpoint": False},
+    {"level": 2,  "prize": "200 рублей",       "amount": 200,       "is_checkpoint": False},
+    {"level": 3,  "prize": "300 рублей",       "amount": 300,       "is_checkpoint": False},
+    {"level": 4,  "prize": "500 рублей",       "amount": 500,       "is_checkpoint": False},
+    {"level": 5,  "prize": "1 000 рублей",     "amount": 1000,      "is_checkpoint": True},
+    {"level": 6,  "prize": "2 000 рублей",     "amount": 2000,      "is_checkpoint": False},
+    {"level": 7,  "prize": "4 000 рублей",     "amount": 4000,      "is_checkpoint": False},
+    {"level": 8,  "prize": "8 000 рублей",     "amount": 8000,      "is_checkpoint": False},
+    {"level": 9,  "prize": "16 000 рублей",    "amount": 16000,     "is_checkpoint": False},
+    {"level": 10, "prize": "32 000 рублей",    "amount": 32000,     "is_checkpoint": True},
+    {"level": 11, "prize": "64 000 рублей",    "amount": 64000,     "is_checkpoint": False},
+    {"level": 12, "prize": "125 000 рублей",   "amount": 125000,    "is_checkpoint": False},
+    {"level": 13, "prize": "250 000 рублей",   "amount": 250000,    "is_checkpoint": False},
+    {"level": 14, "prize": "500 000 рублей",   "amount": 500000,    "is_checkpoint": False},
+    {"level": 15, "prize": "1 000 000 рублей", "amount": 1000000,   "is_checkpoint": False},
 ]
 
 # Тексты призов из спецификации. Показываются на экране окончания игры

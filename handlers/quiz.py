@@ -1,16 +1,24 @@
 """Обработка ответов и подсказок во время игры."""
 from aiogram import F, Router
 from aiogram.fsm.context import FSMContext
-from aiogram.types import CallbackQuery
+from aiogram.types import CallbackQuery, User
 
 from game.engine import answer
 from game.lifelines import audience_help, fifty_fifty, friend_call
-from keyboards import play_keyboard, question_keyboard
+from keyboards import game_over_keyboard, question_keyboard
+from leaderboard import record_game
 from session import load_game, save_game
 from states import Quiz
-from texts import render_game_over, render_question, render_reveal
+from texts import render_game_over, render_question, render_reveal, render_standing_note
 
 router = Router()
+
+
+def display_name(user: User) -> str:
+    """Имя игрока для лидерборда: имя+фамилия из Telegram, иначе @username,
+    иначе id. У Telegram-пользователя first_name есть всегда, так что full_name
+    практически всегда непустой."""
+    return user.full_name or (f"@{user.username}" if user.username else f"id{user.id}")
 
 
 def _render_audience(votes: dict[str, int]) -> str:
@@ -44,8 +52,11 @@ async def cb_answer(callback: CallbackQuery, state: FSMContext) -> None:
 
     if result.finished:
         await state.set_state(None)
+        user = callback.from_user
+        standing = record_game(user.id, display_name(user), result.final_amount, result.won)
         await callback.message.answer(
-            render_game_over(result), reply_markup=play_keyboard("🔁 Играть ещё")
+            render_game_over(result) + render_standing_note(standing),
+            reply_markup=game_over_keyboard(),
         )
     else:
         await callback.message.answer(

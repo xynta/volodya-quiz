@@ -5,10 +5,10 @@ from aiogram.fsm.context import FSMContext
 from aiogram.types import CallbackQuery, Message
 
 from game.engine import new_game
-from keyboards import play_keyboard, question_keyboard
+from keyboards import question_keyboard, welcome_keyboard
 from session import save_game
 from states import Quiz
-from texts import HELP, WELCOME, render_question
+from texts import CMD_INSTRUCTIONS, HELP, WELCOME, render_question
 
 router = Router()
 
@@ -24,12 +24,23 @@ async def start_new_game(message: Message, ctx: FSMContext) -> None:
 @router.message(CommandStart())
 async def cmd_start(message: Message, state: FSMContext) -> None:
     await state.clear()
-    await message.answer(WELCOME, reply_markup=play_keyboard())
+    await message.answer(WELCOME, reply_markup=welcome_keyboard())
 
 
 @router.message(Command("help"))
 async def cmd_help(message: Message) -> None:
     await message.answer(HELP)
+
+
+@router.message(Command("cmd"))
+async def cmd_cmd(message: Message) -> None:
+    await message.answer(CMD_INSTRUCTIONS, disable_web_page_preview=True)
+
+
+@router.callback_query(F.data == "howto_cmd")
+async def cb_howto_cmd(callback: CallbackQuery) -> None:
+    await callback.answer()
+    await callback.message.answer(CMD_INSTRUCTIONS, disable_web_page_preview=True)
 
 
 @router.message(Command("play"))
