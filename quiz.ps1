@@ -9,6 +9,11 @@
 
 $ErrorActionPreference = 'Stop'
 try { [Console]::OutputEncoding = [System.Text.Encoding]::UTF8 } catch {}
+# На старых Windows PowerShell 5.1 запрос к GitHub без TLS 1.2 падает.
+try {
+    [Net.ServicePointManager]::SecurityProtocol =
+        [Net.ServicePointManager]::SecurityProtocol -bor [Net.SecurityProtocolType]::Tls12
+} catch {}
 
 $REPO_RAW      = 'https://raw.githubusercontent.com/xynta/volodya-quiz/main'
 $QUESTIONS_URL = "$REPO_RAW/data/questions.json"
