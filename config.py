@@ -3,9 +3,16 @@ import os
 import sys
 from pathlib import Path
 
-from dotenv import load_dotenv
+# python-dotenv нужен только боту (читает BOT_TOKEN из .env). Консольной
+# версии (console_quiz.py) он не требуется, поэтому импорт необязательный —
+# иначе игру нельзя было бы запустить на чистом stdlib (например, при запуске
+# одной командой на macOS/Linux без установки зависимостей).
+try:
+    from dotenv import load_dotenv
 
-load_dotenv()
+    load_dotenv()
+except ModuleNotFoundError:
+    pass
 
 BOT_TOKEN = os.getenv("BOT_TOKEN")
 

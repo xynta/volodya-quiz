@@ -11,8 +11,10 @@
 
 - **Telegram-бот** — [bot.py](bot.py) (aiogram). Нужен `BOT_TOKEN` в `.env`.
   Ведёт лидерборд: `/top` показывает, кто унёс больше всех рублей (см. ниже).
-- **Консоль одной командой (PowerShell, без установок)** — [quiz.ps1](quiz.ps1).
+- **Консоль одной командой (Windows / PowerShell, без установок)** — [quiz.ps1](quiz.ps1).
   Ни Python, ни файлов на диск — скрипт сам тянет вопросы из репозитория.
+- **Консоль одной командой (macOS / Linux)** — [quiz.sh](quiz.sh). Нужен только
+  `python3`; скрипт сам качает игру во временную папку и запускает ASCII-версию.
 - **Консольная версия на Python в ASCII-стиле** — [console_quiz.py](console_quiz.py).
   Токен не нужен.
 
@@ -31,7 +33,19 @@ powershell -NoProfile -ExecutionPolicy Bypass -Command "irm https://raw.githubus
 ```
 
 Управление: `A/B/C/D` — ответ, `1` / `2` / `3` — подсказки (50:50, зал, друг),
-`Q` — выход. В Telegram-боте эту же команду подскажет `/cmd`.
+`L` — лесенка, `Q` — выход. В Telegram-боте эту же команду подскажет `/cmd`.
+
+## Консоль одной командой (macOS / Linux)
+
+В Terminal (bash или zsh). Нужен только `python3` — сторонние пакеты ставить
+не надо, игра скачивается во временную папку и удаляется после выхода:
+
+```bash
+bash <(curl -fsSL https://raw.githubusercontent.com/xynta/volodya-quiz/main/quiz.sh)
+```
+
+Управление: `A/B/C/D` — ответ, `50` / `зал` / `друг` — подсказки,
+`л` — лесенка, `в` — выход.
 
 ## Консоль на Python — быстрый старт
 
