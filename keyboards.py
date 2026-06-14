@@ -47,9 +47,11 @@ def welcome_keyboard() -> InlineKeyboardMarkup:
 
 
 def game_over_keyboard() -> InlineKeyboardMarkup:
-    """После игры: сыграть ещё или открыть лидерборд."""
+    """После игры: сыграть ещё, открыть лидерборд или запустить версию для
+    консоли (PowerShell) — та же инструкция, что по кнопке на старте и /cmd."""
     builder = InlineKeyboardBuilder()
     builder.button(text="🔁 Играть ещё", callback_data="play")
     builder.button(text="🏆 Лидерборд", callback_data="leaderboard")
+    builder.button(text="💻 Запуск через CMD", callback_data="howto_cmd")
     builder.adjust(1)
     return builder.as_markup()
