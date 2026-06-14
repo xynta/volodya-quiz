@@ -1,4 +1,6 @@
 """Движок лесенки: состояние игры и обработка ответов."""
+from __future__ import annotations  # str | None, list[str] на Python 3.9 и старше
+
 from dataclasses import dataclass, field, asdict
 
 from config import QUESTIONS_PER_GAME, PRIZE_LADDER, day_info

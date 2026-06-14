@@ -8,6 +8,8 @@
 
 Запуск:  python3 console_quiz.py
 """
+from __future__ import annotations  # list[str] на Python 3.9 и старше
+
 import atexit
 import os
 import sys

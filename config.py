@@ -1,4 +1,6 @@
 """Настройки игры и тематическая призовая лесенка."""
+from __future__ import annotations  # поддержка str | None на Python 3.9 и старше
+
 import os
 import sys
 from pathlib import Path

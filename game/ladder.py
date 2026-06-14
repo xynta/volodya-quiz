@@ -1,4 +1,6 @@
 """Помощники по призовой лесенке."""
+from __future__ import annotations  # str | None на Python 3.9 и старше
+
 from config import PRIZE_5_TEXT, PRIZE_10_TEXT, PRIZE_15_TEXT, PRIZE_LADDER
 
 
