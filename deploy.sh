@@ -13,14 +13,21 @@ echo "→ git pull (origin/main)"
 git pull --ff-only
 
 echo "→ перезапуск $UNIT"
+SINCE="$(date '+%Y-%m-%d %H:%M:%S')"
 sudo systemctl restart "$UNIT"
 
-# Дать боту подняться и убедиться, что поллинг стартовал.
-sleep 6
-echo "→ статус: $(systemctl is-active "$UNIT")"
-if journalctl -u "$UNIT" -n 20 --no-pager --since "1 minute ago" | grep -q "Run polling"; then
-  echo "✓ поллинг запущен · $(git log --oneline -1)"
-else
-  echo "⚠ нет 'Run polling' в логах — проверь: journalctl -u $UNIT -n 40"
-  exit 1
-fi
+# Бот поднимается ~10-15с (getMe + delete_webhook), поэтому ждём «Run polling»
+# в цикле до ~40с, а не фиксированной паузой.
+echo -n "→ жду старта поллинга"
+for _ in $(seq 1 20); do
+  sleep 2; echo -n "."
+  if journalctl -u "$UNIT" --no-pager --since "$SINCE" | grep -q "Run polling"; then
+    echo " ✓"
+    echo "✓ поллинг запущен · статус $(systemctl is-active "$UNIT") · $(git log --oneline -1)"
+    exit 0
+  fi
+done
+echo
+echo "⚠ за ~40с не увидел 'Run polling'. Статус: $(systemctl is-active "$UNIT")"
+echo "  проверь: journalctl -u $UNIT -n 40 --no-pager"
+exit 1
