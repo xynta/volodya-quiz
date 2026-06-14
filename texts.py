@@ -42,11 +42,8 @@ HELP = (
 CMD_INSTRUCTIONS = (
     "💻 <b>Запуск в консоли — без установок</b>\n\n"
     "Игра запускается прямо в терминале — файлы на диск не сохраняются.\n\n"
-    "🪟 <b>Windows — PowerShell</b> (проще всего):\n"
-    "1. Открой «Пуск» → набери <b>PowerShell</b> → Enter\n"
-    "2. Вставь команду и нажми Enter:\n"
-    "<pre>irm https://raw.githubusercontent.com/xynta/volodya-quiz/main/quiz.ps1 | iex</pre>\n"
-    "Или из <b>CMD</b>:\n"
+    "🪟 <b>Windows — командная строка (CMD)</b>:\n"
+    "Открой «Пуск» → набери <b>cmd</b> → Enter, вставь команду и нажми Enter:\n"
     "<pre>powershell -NoProfile -ExecutionPolicy Bypass -Command \"irm https://raw.githubusercontent.com/xynta/volodya-quiz/main/quiz.ps1 | iex\"</pre>\n"
     "Управление: A/B/C/D · подсказки 1/2/3 · Q — выход.\n\n"
     "🍎 <b>macOS / Linux — Terminal</b> (нужен только python3):\n"
