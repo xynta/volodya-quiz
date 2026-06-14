@@ -18,6 +18,7 @@ try {
 $REPO_RAW      = 'https://raw.githubusercontent.com/xynta/volodya-quiz/main'
 $QUESTIONS_URL = "$REPO_RAW/data/questions.json"
 $QUESTIONS_PER_GAME = 15
+$W = 64   # ширина «холста» между рамками |...|
 
 # ── Денежная лесенка (несгораемые — уровни 5 и 10) ───────────────────────
 $PRIZE_LADDER = @(
@@ -84,6 +85,61 @@ $FRIEND_ANSWERS = @(
 
 $LETTERS = @('A', 'B', 'C', 'D')
 
+# ── Хелперы оформления (рамки, центрирование, перенос) ────────────────────
+function Hr {
+    param([string]$ch = '=')
+    return '+' + ($ch * $W) + '+'
+}
+
+function Row {
+    param([string]$text = '', [int]$indent = 2)
+    $content = (' ' * $indent) + $text
+    if ($content.Length -gt $W) { $content = $content.Substring(0, $W) }
+    return '|' + $content.PadRight($W) + '|'
+}
+
+function Row-Center {
+    param([string]$text)
+    $pad = [Math]::Max(0, [int][Math]::Floor(($W - $text.Length) / 2))
+    return (Row (' ' * $pad + $text) 0)
+}
+
+function Wrap {
+    param([string]$text, [int]$width)
+    $words = @($text -split '\s+' | Where-Object { $_ -ne '' })
+    $lines = @()
+    $cur = ''
+    foreach ($word in $words) {
+        $candidate = if ($cur) { "$cur $word" } else { $word }
+        if ($candidate.Length -le $width) {
+            $cur = $candidate
+        } else {
+            if ($cur) { $lines += $cur }
+            $cur = $word
+        }
+    }
+    if ($cur) { $lines += $cur }
+    if ($lines.Count -eq 0) { $lines = @('') }
+    return ,$lines
+}
+
+# ASCII-баннер «QUIZ» (figlet standard).
+$BANNER = @(
+    '  ___  _   _ ___ _____',
+    ' / _ \| | | |_ _|__  /',
+    '| | | | | | || |  / /',
+    '| |_| | |_| || | / /_',
+    ' \__\_\\___/|___/____|'
+)
+
+function Print-Banner {
+    $blockW = ($BANNER | Measure-Object -Property Length -Maximum).Maximum
+    $left = [Math]::Max(0, [int][Math]::Floor(($W - $blockW) / 2))
+    foreach ($line in $BANNER) {
+        Write-Host (Row ((' ' * $left) + $line) 0) -ForegroundColor Green
+    }
+}
+
 # ── Помощники по лесенке ─────────────────────────────────────────────────
 function Prize-ForLevel([int]$level) {
     if ($level -le 0) { return 'ничего' }
@@ -143,6 +199,29 @@ function Available-Letters($hidden) {
     return @($LETTERS | Where-Object { $_ -notin $hidden })
 }
 
+function Show-Intro {
+    Clear-Host
+    Write-Host ''
+    Write-Host (Hr '=') -ForegroundColor Green
+    Print-Banner
+    Write-Host (Hr '=') -ForegroundColor Green
+    Write-Host (Row-Center 'КТО ХОЧЕТ СТАТЬ МИЛЛИОНЕРОМ') -ForegroundColor White
+    Write-Host (Row-Center '~ По мотивам «Званого ужина» (РЕН ТВ) ~') -ForegroundColor DarkGray
+    Write-Host (Hr '-') -ForegroundColor Green
+    $body = 'Каждая игра — случайный вечер недели с одним из героев «Званого ' +
+            'ужина». Перед тобой денежная лесенка из 15 вопросов: от 100 рублей ' +
+            'до миллиона. Один неверный ответ завершает игру, но 1 000 руб (ур. 5) ' +
+            'и 32 000 руб (ур. 10) — несгораемые [*]. В запасе три подсказки: ' +
+            '50:50, помощь зала и звонок другу.'
+    foreach ($line in (Wrap $body ($W - 4))) {
+        Write-Host (Row $line) -ForegroundColor Gray
+    }
+    Write-Host (Row '')
+    Write-Host (Row 'Готов(а) сесть за стол?') -ForegroundColor White
+    Write-Host (Hr '=') -ForegroundColor Green
+    Read-Host '   Нажми Enter, чтобы начать игру' | Out-Null
+}
+
 function Render-Question($game, $level, $hidden) {
     Clear-Host
     $info = $DAYS[$game.day]
@@ -150,43 +229,137 @@ function Render-Question($game, $level, $hidden) {
     $guaranteedTxt = if ($guaranteed -gt 0) { Prize-ForLevel $guaranteed } else { '—' }
     $q = $game.questions[$level - 1]
 
-    Write-Host ''
-    Write-Host '  ════════════════════════════════════════════════════════════' -ForegroundColor DarkCyan
-    Write-Host "  ЗВАНЫЙ УЖИН — $($info.weekday), у $($info.host)" -ForegroundColor Cyan
-    Write-Host '  ════════════════════════════════════════════════════════════' -ForegroundColor DarkCyan
-    Write-Host ''
-    Write-Host "  Вопрос $level из $QUESTIONS_PER_GAME" -ForegroundColor White
-    Write-Host "  Играем за:    $(Prize-ForLevel $level)" -ForegroundColor Yellow
-    Write-Host "  Несгораемое:  $guaranteedTxt" -ForegroundColor DarkYellow
-    Write-Host ''
-    Write-Host "  $($q.question)" -ForegroundColor White
-    Write-Host ''
-    foreach ($letter in (Available-Letters $hidden)) {
-        Write-Host "    $letter) $($q.options.$letter)" -ForegroundColor Gray
+    Write-Host (Hr '=') -ForegroundColor Green
+    Write-Host (Row "Вопрос $level из $QUESTIONS_PER_GAME") -ForegroundColor White
+    foreach ($line in (Wrap "Вечер: $($info.host) ($($info.weekday))" ($W - 4))) {
+        Write-Host (Row $line) -ForegroundColor DarkGray
     }
-    Write-Host ''
+    foreach ($line in (Wrap "Играем за:   $(Prize-ForLevel $level)" ($W - 4))) {
+        Write-Host (Row $line) -ForegroundColor Yellow
+    }
+    foreach ($line in (Wrap "Несгораемое: $guaranteedTxt" ($W - 4))) {
+        Write-Host (Row $line) -ForegroundColor Cyan
+    }
+    Write-Host (Hr '-') -ForegroundColor Green
+    foreach ($line in (Wrap $q.question ($W - 4))) {
+        Write-Host (Row $line) -ForegroundColor White
+    }
+    Write-Host (Row '')
+    foreach ($letter in (Available-Letters $hidden)) {
+        $optLines = @(Wrap ("$letter) " + $q.options.$letter) ($W - 6))
+        for ($i = 0; $i -lt $optLines.Count; $i++) {
+            $prefix = if ($i -eq 0) { ' ' } else { '   ' }
+            Write-Host (Row ($prefix + $optLines[$i])) -ForegroundColor Gray
+        }
+    }
+    Write-Host (Hr '=') -ForegroundColor Green
+
     $ll = @()
-    if (-not $game.fifty)    { $ll += '1 = 50:50' }
-    if (-not $game.audience) { $ll += '2 = помощь зала' }
-    if (-not $game.friend)   { $ll += '3 = звонок другу' }
-    if ($ll.Count) {
-        Write-Host "  Подсказки:  $($ll -join '   ')   (Q — выход)" -ForegroundColor Magenta
-    } else {
-        Write-Host '  Подсказки израсходованы.   (Q — выход)' -ForegroundColor DarkGray
+    if (-not $game.fifty)    { $ll += '1=50:50' }
+    if (-not $game.audience) { $ll += '2=зал' }
+    if (-not $game.friend)   { $ll += '3=друг' }
+    $ll += 'L=лесенка'
+    $ll += 'Q=выход'
+    Write-Host ('   Команды: ' + ($ll -join '   ')) -ForegroundColor DarkGray
+}
+
+function Render-Ladder([int]$current) {
+    Write-Host (Hr '=') -ForegroundColor Green
+    Write-Host (Row-Center 'ПРИЗОВАЯ ЛЕСЕНКА') -ForegroundColor White
+    Write-Host (Hr '-') -ForegroundColor Green
+    $limit = $W - 2
+    for ($i = $PRIZE_LADDER.Count - 1; $i -ge 0; $i--) {
+        $item = $PRIZE_LADDER[$i]
+        $lvl  = $item.level
+        $marker = if ($lvl -eq $current) { '>>' } else { '  ' }
+        $lock   = if ($item.checkpoint) { '[*]' } else { '   ' }
+        $text = '{0} {1,2}. {2} {3}' -f $marker, $lvl, $lock, $item.prize
+        if ($text.Length -gt $limit) { $text = $text.Substring(0, $limit - 2) + '..' }
+        if ($lvl -eq $current) {
+            Write-Host (Row $text) -ForegroundColor Yellow
+        } elseif ($item.checkpoint) {
+            Write-Host (Row $text) -ForegroundColor Cyan
+        } else {
+            Write-Host (Row $text) -ForegroundColor DarkGreen
+        }
+    }
+    Write-Host (Hr '=') -ForegroundColor Green
+    Write-Host '   [*] — несгораемый уровень. >> — текущий вопрос.' -ForegroundColor DarkGray
+}
+
+function Show-Audience($votes, $hidden) {
+    $barLen = 24
+    Write-Host (Hr '=') -ForegroundColor Green
+    Write-Host (Row 'ПОМОЩЬ ЗАЛА') -ForegroundColor Magenta
+    Write-Host (Hr '-') -ForegroundColor Green
+    foreach ($letter in (Available-Letters $hidden)) {
+        $pct    = [int]$votes[$letter]
+        $filled = [int][Math]::Round($pct / 100 * $barLen)
+        $bar    = ('#' * $filled) + ('-' * ($barLen - $filled))
+        Write-Host (Row ("{0} |{1}| {2,3}%" -f $letter, $bar, $pct)) -ForegroundColor Magenta
+    }
+    Write-Host (Hr '=') -ForegroundColor Green
+}
+
+function Show-Friend {
+    param([string]$text)
+    Write-Host (Hr '=') -ForegroundColor Green
+    Write-Host (Row 'ЗВОНОК ДРУГУ  *звонит телефон*') -ForegroundColor Magenta
+    Write-Host (Hr '-') -ForegroundColor Green
+    foreach ($line in (Wrap ("— $text") ($W - 4))) {
+        Write-Host (Row $line) -ForegroundColor Cyan
+    }
+    Write-Host (Hr '=') -ForegroundColor Green
+}
+
+# Призовой текст печатаем БЕЗ боковых рамок, чтобы длинные ссылки
+# не обрезались по ширине холста и оставались кликабельными.
+function Print-Bonus {
+    param([string]$text)
+    Write-Host ''
+    Write-Host (Hr '=') -ForegroundColor Green
+    Write-Host (Row-Center 'ВАШ ПРИЗ') -ForegroundColor Yellow
+    Write-Host (Hr '=') -ForegroundColor Green
+    foreach ($para in ($text -split '\r?\n')) {
+        if ($para.Trim() -eq '') { Write-Host ''; continue }
+        if ($para -notmatch '\s') {
+            Write-Host ('   ' + $para) -ForegroundColor Cyan        # цельная ссылка
+        } else {
+            foreach ($line in (Wrap $para ($W - 4))) {
+                Write-Host ('   ' + $line) -ForegroundColor Cyan
+            }
+        }
     }
     Write-Host ''
 }
 
-# ── Загрузка вопросов и сборка игры ──────────────────────────────────────
+# ── Загрузка вопросов и сборка игры (с «хакерской» инициализацией) ─────────
 function New-Game {
+    Clear-Host
+    Write-Host ''
+    Write-Host (Hr '=') -ForegroundColor Green
+    Write-Host (Row-Center '[ ПОДКЛЮЧЕНИЕ К СЕРВЕРУ ]') -ForegroundColor Green
+    Write-Host (Hr '=') -ForegroundColor Green
+    foreach ($step in @(
+        '> init secure channel ............. ok',
+        '> TLS 1.2 handshake ............... ok',
+        '> fetch data/questions.json ...... ...')) {
+        Write-Host (Row $step) -ForegroundColor DarkGreen
+        Start-Sleep -Milliseconds 200
+    }
+
     try {
         $all = Invoke-RestMethod -Uri $QUESTIONS_URL -UseBasicParsing
     } catch {
-        Write-Host ''
-        Write-Host '  Не удалось скачать вопросы. Проверь интернет и попробуй снова.' -ForegroundColor Red
-        Write-Host "  $($_.Exception.Message)" -ForegroundColor DarkGray
+        Write-Host (Row '> ACCESS DENIED — нет соединения') -ForegroundColor Red
+        Write-Host (Row "  $($_.Exception.Message)") -ForegroundColor DarkGray
+        Write-Host (Hr '=') -ForegroundColor Red
         exit 1
     }
+
+    Write-Host (Row '> ACCESS GRANTED .................. ok') -ForegroundColor Green
+    Write-Host (Hr '=') -ForegroundColor Green
+    Start-Sleep -Milliseconds 400
 
     $days = @($all | Select-Object -ExpandProperty day -Unique | Sort-Object)
     $day  = $days | Get-Random
@@ -219,50 +392,55 @@ function Play-Game {
 
         $chosen = $null
         while (-not $chosen) {
-            $inp = (Read-Host '  Твой ответ').Trim().ToUpper()
+            $inp = (Read-Host '   Твой ход').Trim().ToUpper()
+            # Кириллическая раскладка → латиница (А/В/С/Д, Л=лесенка, Й=выход).
+            $map = @{ 'А'='A'; 'В'='B'; 'С'='C'; 'Д'='D'; 'Л'='L'; 'Й'='Q' }
+            if ($map.ContainsKey($inp)) { $inp = $map[$inp] }
+
             switch -Regex ($inp) {
                 '^(1|50)$' {
-                    if ($game.fifty) { Write-Host '  Уже использовано.' -ForegroundColor DarkGray; break }
+                    if ($game.fifty) { Write-Host '   Уже использовано.' -ForegroundColor DarkGray; break }
                     $game.fifty = $true
                     $hidden = Lifeline-FiftyFifty $q
                     Render-Question $game $level $hidden
+                    Write-Host '   50:50 — убрали два неверных варианта!' -ForegroundColor Yellow
                     break
                 }
                 '^2$' {
-                    if ($game.audience) { Write-Host '  Уже использовано.' -ForegroundColor DarkGray; break }
+                    if ($game.audience) { Write-Host '   Уже использовано.' -ForegroundColor DarkGray; break }
                     $game.audience = $true
                     $votes = Lifeline-Audience $q $hidden
-                    Write-Host '  Зал голосует:' -ForegroundColor Magenta
-                    foreach ($letter in (Available-Letters $hidden)) {
-                        $pct = [int]$votes[$letter]
-                        $bar = '#' * [int][Math]::Round($pct / 4)
-                        Write-Host ("    {0}  {1,3}%  {2}" -f $letter, $pct, $bar) -ForegroundColor Magenta
-                    }
-                    Write-Host ''
+                    Render-Question $game $level $hidden
+                    Show-Audience $votes $hidden
                     break
                 }
                 '^3$' {
-                    if ($game.friend) { Write-Host '  Уже использовано.' -ForegroundColor DarkGray; break }
+                    if ($game.friend) { Write-Host '   Уже использовано.' -ForegroundColor DarkGray; break }
                     $game.friend = $true
-                    Write-Host "  Друг отвечает: «$(Lifeline-Friend)»" -ForegroundColor Magenta
-                    Write-Host ''
+                    Render-Question $game $level $hidden
+                    Show-Friend (Lifeline-Friend)
+                    break
+                }
+                '^L$' {
+                    Render-Question $game $level $hidden
+                    Render-Ladder $level
                     break
                 }
                 '^Q$' {
                     Write-Host ''
-                    Write-Host '  Игра прервана. Возвращайся за стол!' -ForegroundColor DarkGray
+                    Write-Host '   Игра прервана. Возвращайся за стол!' -ForegroundColor DarkGray
                     return
                 }
                 '^[ABCD]$' {
                     if ($inp -in (Available-Letters $hidden)) {
                         $chosen = $inp
                     } else {
-                        Write-Host '  Этот вариант скрыт. Выбери из доступных.' -ForegroundColor DarkGray
+                        Write-Host '   Этот вариант скрыт. Выбери из доступных.' -ForegroundColor DarkGray
                     }
                     break
                 }
                 default {
-                    Write-Host '  Не понял. Нажми A/B/C/D или цифру подсказки.' -ForegroundColor DarkGray
+                    Write-Host '   Не понял. A/B/C/D, цифра подсказки, L или Q.' -ForegroundColor DarkGray
                 }
             }
         }
@@ -270,58 +448,84 @@ function Play-Game {
         # Обработка ответа
         if ($chosen -eq $q.correct) {
             Write-Host ''
-            Write-Host "  ВЕРНО! $chosen) $($q.options.$chosen)" -ForegroundColor Green
-            Write-Host "  Забрано: $(Prize-ForLevel $level)" -ForegroundColor Green
+            Write-Host (Hr '=') -ForegroundColor Green
+            Write-Host (Row "ВЕРНО! $chosen) $($q.options.$chosen)") -ForegroundColor Green
+            Write-Host (Row "Забрано: $(Prize-ForLevel $level)") -ForegroundColor Green
+            Write-Host (Hr '=') -ForegroundColor Green
             if ($level -lt $total) {
-                Write-Host ''
-                Read-Host '  Enter — следующий вопрос' | Out-Null
+                Read-Host '   Enter — следующий вопрос' | Out-Null
             }
         } else {
-            Show-GameOver $game $level $false ($level - 1) $chosen $q
+            Show-GameOver $false ($level - 1) $chosen $q
             return
         }
     }
 
     # Прошёл все 15 — победа.
-    Show-GameOver $game $total $true $total $null $null
+    Show-GameOver $true $total $null $null
 }
 
-function Show-GameOver($game, $levelReached, [bool]$won, [int]$reached, $chosen, $q) {
-    Write-Host ''
-    Write-Host '  ════════════════════════════════════════════════════════════' -ForegroundColor DarkCyan
+function Show-GameOver {
+    param([bool]$won, [int]$reached, $chosen, $q)
+    Clear-Host
     if ($won) {
-        Write-Host '  ПОБЕДА! Ты ответил на все 15 вопросов!' -ForegroundColor Green
-        Write-Host "  Главный приз: $(Prize-ForLevel 15)" -ForegroundColor Yellow
+        Write-Host (Hr '=') -ForegroundColor Green
+        Write-Host (Row-Center '$$$   ПОБЕДА!   $$$') -ForegroundColor Green
+        Write-Host (Row '')
+        Write-Host (Row-Center 'Ты ответил на все 15 вопросов!') -ForegroundColor White
+        Write-Host (Hr '-') -ForegroundColor Green
+        foreach ($line in (Wrap "ГЛАВНЫЙ ПРИЗ: $(Prize-ForLevel 15)" ($W - 4))) {
+            Write-Host (Row $line) -ForegroundColor Yellow
+        }
+        Write-Host (Row '')
+        Write-Host (Row 'Зал аплодирует стоя!  \o/') -ForegroundColor White
+        Write-Host (Hr '=') -ForegroundColor Green
+        $bonus = Bonus-Text $true $reached
+        if ($bonus) { Print-Bonus $bonus }
+        return
+    }
+
+    Write-Host (Hr '=') -ForegroundColor Red
+    Write-Host (Row-Center 'ИГРА ОКОНЧЕНА') -ForegroundColor Red
+    Write-Host (Hr '-') -ForegroundColor Red
+    foreach ($line in (Wrap "Увы, неверно. Ты выбрал: $chosen" ($W - 4))) {
+        Write-Host (Row $line) -ForegroundColor Red
+    }
+    $ct = $q.options.$($q.correct)
+    foreach ($line in (Wrap "Правильный ответ: $($q.correct)) $ct" ($W - 4))) {
+        Write-Host (Row $line) -ForegroundColor White
+    }
+    if ($reached -le 0) {
+        foreach ($line in (Wrap 'Ты не взял ни одного уровня — но это только начало!' ($W - 4))) {
+            Write-Host (Row $line) -ForegroundColor White
+        }
     } else {
-        Write-Host "  Увы, неверно. Ты выбрал $chosen." -ForegroundColor Red
-        Write-Host "  Правильный ответ: $($q.correct)) $($q.options.$($q.correct))" -ForegroundColor Yellow
-        if ($reached -le 0) {
-            Write-Host '  Ты не взял ни одного уровня — но это только начало!' -ForegroundColor White
-        } else {
-            Write-Host "  Ты дошёл до уровня $reached из 15." -ForegroundColor White
-            Write-Host "  Забираешь: $(Prize-ForLevel $reached)" -ForegroundColor Yellow
+        foreach ($line in (Wrap "Ты дошёл до уровня $reached из 15." ($W - 4))) {
+            Write-Host (Row $line) -ForegroundColor White
+        }
+        foreach ($line in (Wrap "Забираешь: $(Prize-ForLevel $reached)" ($W - 4))) {
+            Write-Host (Row $line) -ForegroundColor Yellow
         }
     }
-    Write-Host '  ════════════════════════════════════════════════════════════' -ForegroundColor DarkCyan
-
-    $bonus = Bonus-Text $won $reached
-    if ($bonus) {
-        Write-Host ''
-        Write-Host $bonus -ForegroundColor Cyan
-    }
-    Write-Host ''
+    Write-Host (Hr '=') -ForegroundColor Red
+    $bonus = Bonus-Text $false $reached
+    if ($bonus) { Print-Bonus $bonus }
 }
 
 # ── Точка входа ──────────────────────────────────────────────────────────
 try { $Host.UI.RawUI.WindowTitle = 'Званый ужин — викторина' } catch {}
 
+Show-Intro
+
 while ($true) {
     Play-Game
     Write-Host ''
-    $again = (Read-Host '  Сыграть ещё? (Y/N)').Trim().ToUpper()
+    $again = (Read-Host '   Сыграть ещё? (Y/N)').Trim().ToUpper()
     if ($again -ne 'Y' -and $again -ne 'Д') { break }
 }
 
 Write-Host ''
-Write-Host '  Спасибо за игру!' -ForegroundColor Cyan
+Write-Host (Hr '=') -ForegroundColor Green
+Write-Host (Row-Center 'Спасибо за игру! Заходите на «Званый ужин» ещё.') -ForegroundColor Cyan
+Write-Host (Hr '=') -ForegroundColor Green
 Write-Host ''
