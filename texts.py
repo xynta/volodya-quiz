@@ -34,21 +34,24 @@ HELP = (
     "• /top — 🏆 лидерборд: сумма унесённых несгораемых по всем игрокам\n"
 )
 
-# Инструкция по запуску консольной версии одной командой. Игра — это
-# PowerShell-скрипт quiz.ps1 в репозитории: команда скачивает его и
-# выполняет прямо в консоли, без установки Python и без скачивания файлов.
+# Инструкция по запуску консольной версии одной командой. На Windows это
+# PowerShell-скрипт quiz.ps1, на macOS/Linux — quiz.sh: команда сама качает
+# скрипт и выполняет его прямо в терминале, без сохранения файлов на диск.
+# ВАЖНО: parse_mode=HTML, поэтому «<» в команде для macOS экранирован как
+# &lt; — иначе Telegram примет его за тег и не отправит сообщение.
 CMD_INSTRUCTIONS = (
     "💻 <b>Запуск в консоли — без установок</b>\n\n"
-    "Игра запускается прямо в командной строке Windows 10/11. "
-    "Ничего ставить не нужно: ни Python, ни файлов на диск.\n\n"
-    "<b>PowerShell</b> (проще всего):\n"
-    "1. Открой меню «Пуск» → набери <b>PowerShell</b> → Enter\n"
+    "Игра запускается прямо в терминале — файлы на диск не сохраняются.\n\n"
+    "🪟 <b>Windows — PowerShell</b> (проще всего):\n"
+    "1. Открой «Пуск» → набери <b>PowerShell</b> → Enter\n"
     "2. Вставь команду и нажми Enter:\n"
     "<pre>irm https://raw.githubusercontent.com/xynta/volodya-quiz/main/quiz.ps1 | iex</pre>\n"
-    "<b>Командная строка (CMD):</b>\n"
+    "Или из <b>CMD</b>:\n"
     "<pre>powershell -NoProfile -ExecutionPolicy Bypass -Command \"irm https://raw.githubusercontent.com/xynta/volodya-quiz/main/quiz.ps1 | iex\"</pre>\n"
-    "<b>Управление:</b> отвечай клавишами A/B/C/D. "
-    "Подсказки: 1 — 50:50, 2 — помощь зала, 3 — звонок другу."
+    "Управление: A/B/C/D · подсказки 1/2/3 · Q — выход.\n\n"
+    "🍎 <b>macOS / Linux — Terminal</b> (нужен только python3):\n"
+    "<pre>bash &lt;(curl -fsSL https://raw.githubusercontent.com/xynta/volodya-quiz/main/quiz.sh)</pre>\n"
+    "Управление: A/B/C/D · подсказки 50/зал/друг · л — лесенка · в — выход."
 )
 
 
