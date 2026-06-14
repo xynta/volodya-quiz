@@ -529,3 +529,8 @@ Write-Host (Hr '=') -ForegroundColor Green
 Write-Host (Row-Center 'Спасибо за игру! Заходите на «Званый ужин» ещё.') -ForegroundColor Cyan
 Write-Host (Hr '=') -ForegroundColor Green
 Write-Host ''
+
+# Пауза в конце, чтобы окно не закрылось мгновенно и можно было прочитать
+# финальный экран с ссылками на призы — независимо от способа запуска
+# (Win+R, двойной клик, CMD). Не требует флага -NoExit у powershell.
+try { Read-Host '   Нажми Enter, чтобы закрыть окно' | Out-Null } catch {}
